@@ -17,7 +17,7 @@ long_description = (
     'Detailed Documentation\n'
     '**********************\n'
     + '\n' +
-    read('hostout', 'plone', 'plone', 'README.txt')
+    read('hostout', 'plone', 'README.txt')
     + '\n' +
     'Contributors\n'
     '************\n'
@@ -31,7 +31,6 @@ long_description = (
     + '\n' +
    'Download\n'
     '********\n')
-
 
 tests_require = ['zope.testing', 'zc.buildout']
 
@@ -56,14 +55,15 @@ setup(name='hostout.plone',
       namespace_packages=['hostout',],
       include_package_data=True,
       zip_safe=False,
-      install_requires=['setuptools',
-                        'zc.buildout'
-                        # -*- Extra requirements: -*-
-                        ],
+      install_requires = [
+                          'zc.recipe.egg',
+                          'setuptools',
+                          'collective.hostout>=1.0a5',
+                          ],
+      entry_points = {'zc.buildout':['default = hostout.plone:Recipe'],
+                      'fabric': ['fabfile = hostout.plone.fabfile']
+                      },
       tests_require=tests_require,
       extras_require=dict(tests=tests_require),
       test_suite='hostout.plone.tests.test_docs.test_suite',
-    entry_points = {'zc.buildout':['default = hostout.plone:Recipe'],
-                    'fabric': ['fabfile = hostout.plone.fabfile']
-                    },
       )

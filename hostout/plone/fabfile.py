@@ -1,5 +1,5 @@
 from fabric import api
-from hostout import asbuildoutuser
+from collective.hostout.hostout import  asbuildoutuser
 
 def fscopy(tgt, db='Data.fs', filestorage="var/filestorage"):
     "Not working yet"
@@ -27,16 +27,16 @@ def fsget(filestorage="Data.fs", filestorage_dir="var/filestorage"):
     """ download a database from teh remote server and overwrite the local """
     api.env.hostout.fsbackup(filestorage, filestorage_dir)
     db = filestorage
-    with cd(api.env.path):
-        with asbuildoutuser:
-            api.get('var/backups/%(db)s')
-            api.local('bin/repozo --backup -f %(filestorage_dir)s/%(db)s --gzip -r var/backups/%(db)s' % locals())
+    with api.cd(api.env.path):
+        with asbuildoutuser():
+            api.get('var/backups/%(db)s'%locals())
+            api.local('bin/repozo --recover -o %(filestorage_dir)s/%(db)s -r var/backups/%(filestorage)s' % locals())
 
 def fsbackup(filestorage="Data.fs", filestorage_dir="var/filestorage"):
     hostout = api.env.hostout
     db = filestorage
-    with cd(api.env.path):
-        with asbuildoutuser:
+    with api.cd(api.env.path):
+        with asbuildoutuser():
             api.run('mkdir -p var/backups/%(db)s' % locals())
             api.run('bin/repozo --backup -f %(filestorage_dir)s/%(db)s --gzip -r var/backups/%(db)s' % locals())
 
@@ -44,8 +44,8 @@ def fsbackup(filestorage="Data.fs", filestorage_dir="var/filestorage"):
 def fsrestore(filestorage="Data.fs", filestorage_dir="var/filestorage"):
     hostout = api.env.hostout
     hostout.supervisorctl("stop all")
-    with cd(api.env.path):
-        with asbuildoutuser:
+    with api.cd(api.env.path):
+        with asbuildoutuser():
             api.run('bin/repozo --recover -o %(filestorage_dir)s/%(db)s -r var/backups/%(filestorage)s' % locals())
     hostout.supervisorctl("start all")
     
