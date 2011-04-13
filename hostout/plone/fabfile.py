@@ -44,6 +44,24 @@ def fscopy(tgt, filestorage="Data.fs", filestorage_dir="var/filestorage"):
     target.run("rm -Rf /tmp/%(filestorage)s " % e )
     target.fsrestore(filestorage, filestorage_dir)
 
+def blobcopy(tgt, blobstorage="blobstorage"):
+    "Copy blobstorage to tgt buildout (must be on the same machine)"
+    target = api.env.hostout.hostouts[tgt]
+    towner = target.options['buildout-user']
+    e = dict(blobstorage=blobstorage, towner=towner)
+
+    # Assumes we're on the same machine for this to work
+    assert target.options['host'] == api.env.hostout.options['host']
+
+    with api.cd(api.env.path):
+        with asbuildoutuser():
+            api.run("cp -R var/%(blobstorage)s /tmp" % e)
+            api.run("chown -R %(towner)s /tmp/%(blobstorage)s" % e)
+
+    target.supervisorctl("stop all")
+    target.run("cp -fR /tmp/%(blobstorage)s var/" % e )
+    target.run("rm -Rf /tmp/%(blobstorage)s " % e )
+    target.supervisorctl("start all")
 
 
 
