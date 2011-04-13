@@ -1,7 +1,7 @@
 from fabric import api
 from collective.hostout.hostout import  asbuildoutuser
 
-def fscopy(tgt, db='Data.fs', filestorage="var/filestorage"):
+def _fscopy(tgt, db='Data.fs', filestorage="var/filestorage"):
     "Not working yet"
     hostout = api.env.hostout
     tgt = hostout.hostouts[tgt]
@@ -22,6 +22,30 @@ def fscopy(tgt, db='Data.fs', filestorage="var/filestorage"):
     #api.local('scp -B -v -i %(srckey)s -i %(destkey)s %(src)s  Data.fs '%locals())
     #api.local('scp -B -v -i %(srckey)s -i %(destkey)s Data.fs %(dest)s   '%locals())
     #api.local('scp -B -v -i %(srckey)s -i %(destkey)s %(src)s  %(dest)s '%locals())
+
+
+def fscopy(tgt, filestorage="Data.fs", filestorage_dir="var/filestorage"):
+    "Move the Data.fs to tgt (must be on the same machine)"
+    target = api.env.hostout.hostouts[tgt]
+    towner = target.options['buildout-user']
+    e = dict(filestorage=filestorage, towner=towner)
+
+    # Assumes we're on the same machine for this to work
+    assert target.options['host'] == api.env.hostout.options['host']
+
+    api.env.hostout.fsbackup(filestorage, filestorage_dir)
+    with api.cd(api.env.path):
+        with asbuildoutuser():
+            backup = "var/backups/%(filestorage)s" % e
+            api.run("cp -R %(backup)s /tmp" % dict(backup=backup))
+            api.run("chown -R %(towner)s /tmp/%(filestorage)s" % e)
+
+    target.run("cp -fR /tmp/%(filestorage)s var/backups/%(filestorage)s" % e )
+    target.run("rm -Rf /tmp/%(filestorage)s " % e )
+    target.fsrestore(filestorage, filestorage_dir)
+
+
+
 
 def fsget(filestorage="Data.fs", filestorage_dir="var/filestorage"):
     """ download a database from teh remote server and overwrite the local """
@@ -46,6 +70,6 @@ def fsrestore(filestorage="Data.fs", filestorage_dir="var/filestorage"):
     hostout.supervisorctl("stop all")
     with api.cd(api.env.path):
         with asbuildoutuser():
-            api.run('bin/repozo --recover -o %(filestorage_dir)s/%(db)s -r var/backups/%(filestorage)s' % locals())
+            api.run('bin/repozo --recover -o %(filestorage_dir)s/%(filestorage)s -r var/backups/%(filestorage)s' % locals())
     hostout.supervisorctl("start all")
     
