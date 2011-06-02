@@ -91,3 +91,14 @@ def fsrestore(filestorage="Data.fs", filestorage_dir="var/filestorage"):
             api.run('bin/repozo --recover -o %(filestorage_dir)s/%(filestorage)s -r var/backups/%(filestorage)s' % locals())
     hostout.supervisorctl("start all")
     
+
+def hotfix(url):
+    """ Takes a url and will deploy that to your products directory. Don't forget to restart after """
+    with api.cd(api.env.path+'/products'):
+        with asbuildoutuser():
+            #api.run("curl %s /tmp/hotfix.zip"%url)
+            api.run("python -c \"import urllib; f=open('/tmp/hotfix.zip','w'); f.write(urllib.urlopen('%s').read()); f.close()\""%url)
+            api.run("unzip /tmp/hotfix.zip")
+            api.run('rm /tmp/hotfix.zip')
+            #api.run("python2.6 -c \"import zipfile;import urllib;import StringIO; zipfile.ZipFile(StringIO.StringIO(urllib.urlopen('%s').read())).extractall()\""%url)
+            
