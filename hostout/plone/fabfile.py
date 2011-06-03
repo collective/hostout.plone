@@ -92,9 +92,9 @@ def fsrestore(filestorage="Data.fs", filestorage_dir="var/filestorage"):
     hostout.supervisorctl("start all")
     
 
-def hotfix(url):
+def hotfix(url,products_dir='products'):
     """ Takes a url and will deploy that to your products directory. Don't forget to restart after """
-    with api.cd(api.env.path+'/products'):
+    with api.cd('%s/%s'%(api.env.path,products_dir)):
         with asbuildoutuser():
             #api.run("curl %s /tmp/hotfix.zip"%url)
             api.run("python -c \"import urllib; f=open('/tmp/hotfix.zip','w'); f.write(urllib.urlopen('%s').read()); f.close()\""%url)
