@@ -1,5 +1,8 @@
 from fabric import api
 from collective.hostout.hostout import  asbuildoutuser
+import os.path
+import urllib
+
 
 def _fscopy(tgt, db='Data.fs', filestorage="var/filestorage"):
     "Not working yet"
@@ -71,7 +74,8 @@ def fsget(filestorage="Data.fs", filestorage_dir="var/filestorage"):
     db = filestorage
     with api.cd(api.env.path):
         with asbuildoutuser():
-            api.get('var/backups/%(db)s'%locals())
+            api.local("mkdir -p backups")
+            api.get('var/backups/%(db)s'%locals(), 'var/backups/%(db)s'%locals())
             api.local('bin/repozo --recover -o %(filestorage_dir)s/%(db)s -r var/backups/%(filestorage)s' % locals())
 
 def fsbackup(filestorage="Data.fs", filestorage_dir="var/filestorage"):
@@ -97,8 +101,15 @@ def hotfix(url,products_dir='products'):
     with api.cd('%s/%s'%(api.env.path,products_dir)):
         with asbuildoutuser():
             #api.run("curl %s /tmp/hotfix.zip"%url)
-            api.run("python -c \"import urllib; f=open('/tmp/hotfix.zip','w'); f.write(urllib.urlopen('%s').read()); f.close()\""%url)
-            api.run("unzip /tmp/hotfix.zip")
-            api.run('rm /tmp/hotfix.zip')
+            #api.run("python -c \"import urllib; f=open('/tmp/hotfix.zip','w'); f.write(urllib.urlopen('%s').read()); f.close()\""%url)
+            filename = os.path.basename(url)
+            tmp = '/tmp/%s'%filename
+            if not os.path.exists(tmp):
+                f=open(tmp,'w')
+                f.write(urllib.urlopen(url).read())
+                f.close()
+            api.put(tmp, tmp)
+            api.run("unzip -o %s"%tmp)
+            api.run('rm %s'%tmp)
             #api.run("python2.6 -c \"import zipfile;import urllib;import StringIO; zipfile.ZipFile(StringIO.StringIO(urllib.urlopen('%s').read())).extractall()\""%url)
             
