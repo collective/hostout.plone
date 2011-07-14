@@ -109,7 +109,12 @@ def hotfix(url,products_dir='products'):
                 f.write(urllib.urlopen(url).read())
                 f.close()
             api.put(tmp, tmp)
-            api.run("unzip -o %s"%tmp)
+            try:
+                api.run("unzip -o %s"%tmp)
+            except:
+                api.run("python2.6 -c \"import zipfile;import urllib;import StringIO; zipfile.ZipFile(StringIO.StringIO(urllib.urlopen('%s').read())).extractall()\""%url)
+
+            group = api.env['buildout-group']
+            api.run("chgrp -R %s ."%(group))
             api.run('rm %s'%tmp)
-            #api.run("python2.6 -c \"import zipfile;import urllib;import StringIO; zipfile.ZipFile(StringIO.StringIO(urllib.urlopen('%s').read())).extractall()\""%url)
-            
+
