@@ -58,7 +58,7 @@ setup(name='hostout.plone',
       install_requires = [
                           'zc.recipe.egg',
                           'setuptools',
-                          'collective.hostout>=1.0a5',
+                          'collective.hostout',
                           ],
       entry_points = {'zc.buildout':['default = hostout.plone:Recipe'],
                       'fabric': ['fabfile = hostout.plone.fabfile']
